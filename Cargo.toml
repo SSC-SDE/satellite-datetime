@@ -1,0 +1,37 @@
+[package]
+name = "satellite-datetime"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+description = "Satellite-clean timescales for Earth, the Moon, and the solar system"
+repository = "https://github.com/shankhyachatterjee/satellite-datetime"
+readme = "README.md"
+keywords = ["time", "tai", "utc", "spacecraft", "lunar"]
+categories = ["date-and-time", "no-std", "science"]
+exclude = [".github"]
+
+[features]
+default = ["std", "earth", "tz", "gnss", "lunar", "mars", "bodies", "ccsds"]
+std = ["alloc"]
+alloc = []
+earth = []
+tz = ["earth"]
+gnss = ["earth"]
+lunar = []
+mars = []
+bodies = []
+ccsds = []
+
+[lib]
+name = "satellite_datetime"
+
+[dependencies]
+libm = { version = "0.2.15", default-features = false }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

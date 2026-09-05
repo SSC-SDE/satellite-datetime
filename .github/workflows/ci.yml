@@ -1,0 +1,22 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: fmt
+        run: cargo fmt --all -- --check
+      - name: test default
+        run: cargo test --all-features
+      - name: test satellite profile
+        run: cargo test --no-default-features --lib
+      - name: clippy
+        run: cargo clippy --all-features -- -D warnings
