@@ -29,15 +29,13 @@ MSRV: **1.85**. License: **MIT OR Apache-2.0**. SemVer: `0.x` may break in any m
 
 ## Documentation
 
-Hosted API docs will live at **[docs.rs/satellite-datetime](https://docs.rs/satellite-datetime)** after the first `cargo publish` to [crates.io](https://crates.io/crates/satellite-datetime). Pushing to GitHub does **not** create that site.
+API reference: **[docs.rs/satellite-datetime](https://docs.rs/satellite-datetime)**.
 
-Until then, generate the same rustdoc locally:
+Generate rustdoc locally:
 
 ```bash
 cargo doc --all-features --no-deps --open
 ```
-
-`Cargo.toml` sets `documentation = "https://docs.rs/satellite-datetime"` so crates.io can link it once the crate exists.
 
 ## Satellite profile
 
@@ -111,3 +109,9 @@ assert_eq!(leap.to_utc().unwrap().second, 60);
 ## License
 
 Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT) at your option.
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the fork → PR workflow and
+[`./scripts/check.sh`](scripts/check.sh) for local CI checks. Please follow the
+[Code of Conduct](CODE_OF_CONDUCT.md). Pull requests run GitHub Actions automatically.

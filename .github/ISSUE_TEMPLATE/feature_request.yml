@@ -1,0 +1,59 @@
+name: Feature request
+description: New timescale, codec, or API improvement
+title: "[feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the use case and which timescale or standard applies. This crate is 0.1 WIP;
+        large features may be deferred until a clear science source exists.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do? Who is the user (ground, lab, embedded)?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: API sketch, module (`earth`, `lunar`, `ccsds`, etc.), feature flag
+    validations:
+      required: true
+
+  - type: dropdown
+    id: timescale
+    attributes:
+      label: Primary timescale / standard
+      options:
+        - TAI / TT / relativistic (TCG, TCB, TDB)
+        - UTC / leap seconds / civil time
+        - Time zones / DST
+        - GNSS (GPS, Galileo, BeiDou)
+        - Lunar (TCL / LTC)
+        - Mars (MSD / MTC)
+        - Other planets / bodies
+        - CCSDS wire format
+        - Interop (chrono, jiff, hifitime)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: accuracy
+    attributes:
+      label: Accuracy requirements
+      description: e.g. ns, µs, ms; cite IAU/IERS/NASA if known
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraints
+      options:
+        - label: Must work with --no-default-features (no_std)
+        - label: Needs pinned data table (no network on device)
+        - label: Needs golden-vector tests against ERFA or similar

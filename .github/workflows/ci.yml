@@ -4,31 +4,40 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
+    name: fmt, test, clippy, package
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - name: fmt
+      - name: cargo fmt
         run: cargo fmt --all -- --check
-      - name: test default
+      - name: cargo test (all features)
         run: cargo test --all-features
-      - name: test satellite profile
+      - name: cargo test (no_std core)
         run: cargo test --no-default-features --lib
-      - name: example
+      - name: cargo example rfc3339_leap
         run: cargo run --example rfc3339_leap --features earth
-      - name: clippy
+      - name: cargo clippy
         run: cargo clippy --all-features -- -D warnings
-      - name: package
+      - name: cargo package
         run: cargo package --locked
 
   msrv:
+    name: MSRV 1.85
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.85.0
-      - name: check MSRV
+      - name: cargo check (all features)
         run: cargo check --all-features

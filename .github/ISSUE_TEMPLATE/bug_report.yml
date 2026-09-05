@@ -1,0 +1,59 @@
+name: Bug report
+description: Incorrect conversion, parse error, or unexpected result
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please include a minimal repro. For security-sensitive
+        conversion bugs, use [Security advisories](https://github.com/SSC-SDE/satellite-datetime/security/advisories/new) instead.
+
+  - type: input
+    id: version
+    attributes:
+      label: satellite-datetime version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: features
+    attributes:
+      label: Feature profile
+      options:
+        - default (all features)
+        - no-default-features (no_std core only)
+        - custom (describe below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: Code or steps that show the bug
+      placeholder: |
+        use satellite_datetime::...;
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Timescale (UTC, TAI, GPS, Mars, etc.), rustc version, platform

@@ -5,6 +5,12 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This crate is **0.x**: entries may include breaking changes without a 1.0 bump.
 
+## Unreleased
+
+### Added
+
+- Open-source contribution pipeline: expanded CONTRIBUTING, Code of Conduct, issue/PR templates, `scripts/check.sh`.
+
 ## [0.1.0] - 2026-09-06
 
 ### Added
