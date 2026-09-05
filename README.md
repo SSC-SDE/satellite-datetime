@@ -1,15 +1,38 @@
 # satellite-datetime
 
-Rust timescales for spacecraft, the Moon, and the solar system. An **instant is not a calendar**: the core stores TAI nanoseconds since 1958-01-01. UTC leap seconds, IANA DST, lunar TCL, and Mars sols are projections of that instant.
+[![crates.io](https://img.shields.io/crates/v/satellite-datetime.svg)](https://crates.io/crates/satellite-datetime)
+[![docs.rs](https://img.shields.io/docsrs/satellite-datetime)](https://docs.rs/satellite-datetime)
+[![License](https://img.shields.io/crates/l/satellite-datetime.svg)](LICENSE-MIT)
 
-This repository is **private** until it is explicitly open-sourced.
+**0.1 work-in-progress.** APIs will break. This is **not** flight-qualified software.
+Time zones are a **seven-zone subset**, not the IANA database. Lunar TCL has the IAU
+2024 origin but **no periodic BCRS series**. LTC is a placeholder until BIPM/CGPM
+publish an operational offset.
+
+Rust timescales for spacecraft, the Moon, and the solar system. An **instant is not a calendar**: the core stores TAI nanoseconds since 1958-01-01. UTC leap seconds, DST, lunar TCL, and Mars sols are projections of that instant.
+
+## Install
+
+```toml
+[dependencies]
+satellite-datetime = "0.1"
+```
+
+Satellite / `no_std` (no default features, no allocator):
+
+```toml
+[dependencies]
+satellite-datetime = { version = "0.1", default-features = false }
+```
+
+MSRV: **1.85**. License: **MIT OR Apache-2.0**. SemVer: `0.x` may break in any minor or patch as the science and API settle; pin an exact version in production experiments.
 
 ## Satellite profile
 
-Flight software often has no OS and no heap. Core types compile with:
+Core types compile without an OS or heap:
 
 ```bash
-cargo test --no-default-features
+cargo test --no-default-features --lib
 ```
 
 A laptop build (`cargo test`) enables Earth civil time, time zones, GNSS, Moon, Mars, generic bodies, and CCSDS codecs.
@@ -75,4 +98,4 @@ assert_eq!(leap.to_utc().unwrap().second, 60);
 
 ## License
 
-MIT OR Apache-2.0.
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT) at your option.

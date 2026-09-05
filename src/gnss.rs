@@ -17,10 +17,12 @@ impl Instant {
         Ok((week, sow))
     }
 
+    /// Galileo System Time reading (treated as TAI − 19 s).
     pub fn reading_gst(self) -> Reading<Gst> {
         Reading::new(self.as_tai_nanos() + GPS_MINUS_TAI.as_nanos())
     }
 
+    /// BeiDou Time reading (TAI − 33 s).
     pub fn reading_bdt(self) -> Reading<Bdt> {
         Reading::new(self.as_tai_nanos() + BDT_MINUS_TAI.as_nanos())
     }

@@ -18,5 +18,17 @@ jobs:
         run: cargo test --all-features
       - name: test satellite profile
         run: cargo test --no-default-features --lib
+      - name: example
+        run: cargo run --example rfc3339_leap --features earth
       - name: clippy
         run: cargo clippy --all-features -- -D warnings
+      - name: package
+        run: cargo package --locked
+
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+      - name: check MSRV
+        run: cargo check --all-features

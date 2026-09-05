@@ -17,12 +17,19 @@ use crate::julian::{civil_from_unix_days, unix_days_from_civil};
 /// Proleptic Gregorian civil date and clock, tagged as UTC (may include second=60).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct CivilUtc {
+    /// Proleptic Gregorian year.
     pub year: i32,
+    /// Month `1..=12`.
     pub month: u8,
+    /// Day of month, `1..=31` (validated).
     pub day: u8,
+    /// Hour `0..=23`.
     pub hour: u8,
+    /// Minute `0..=59`.
     pub minute: u8,
+    /// Second `0..=60` (`60` only on a positive UTC leap second).
     pub second: u8,
+    /// Nanosecond `0..=999_999_999`.
     pub nanosecond: u32,
 }
 

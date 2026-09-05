@@ -9,6 +9,7 @@ use crate::instant::Instant;
 /// IAU cartographic rotation for a body (Archinal et al. / WGCCRE).
 #[derive(Clone, Copy, Debug)]
 pub struct Body {
+    /// English name.
     pub name: &'static str,
     /// Prime meridian at J2000, degrees.
     pub w0_deg: f64,
@@ -16,52 +17,62 @@ pub struct Body {
     pub wdot_deg_per_day: f64,
 }
 
+/// Mercury (IAU WGCCRE rotation).
 pub const MERCURY: Body = Body {
     name: "Mercury",
     w0_deg: 329.5469,
     wdot_deg_per_day: 6.138_502_5,
 };
+/// Venus (IAU WGCCRE rotation).
 pub const VENUS: Body = Body {
     name: "Venus",
     w0_deg: 160.20,
     wdot_deg_per_day: -1.481_368_8,
 };
+/// Earth (IAU WGCCRE rotation).
 pub const EARTH: Body = Body {
     name: "Earth",
     w0_deg: 190.147,
     wdot_deg_per_day: 360.985_623_5,
 };
+/// Moon (IAU WGCCRE rotation).
 pub const MOON: Body = Body {
     name: "Moon",
     w0_deg: 38.3213,
     wdot_deg_per_day: 13.176_358_15,
 };
+/// Mars (IAU WGCCRE rotation). Sidereal only; civil sols are [`crate::mars`].
 pub const MARS: Body = Body {
     name: "Mars",
     w0_deg: 176.630,
     wdot_deg_per_day: 350.891_982_26,
 };
+/// Jupiter System III (IAU WGCCRE rotation).
 pub const JUPITER: Body = Body {
     name: "Jupiter",
     w0_deg: 284.95,
     wdot_deg_per_day: 870.536_000_0,
 };
+/// Saturn (IAU WGCCRE rotation).
 pub const SATURN: Body = Body {
     name: "Saturn",
     w0_deg: 38.90,
     wdot_deg_per_day: 810.793_902_4,
 };
+/// Uranus (IAU WGCCRE rotation).
 pub const URANUS: Body = Body {
     name: "Uranus",
     w0_deg: 203.81,
     wdot_deg_per_day: -501.160_092_8,
 };
+/// Neptune (IAU WGCCRE rotation).
 pub const NEPTUNE: Body = Body {
     name: "Neptune",
     w0_deg: 299.36,
     wdot_deg_per_day: 541.139_775_7,
 };
 
+/// Mercury through Neptune (and the Moon) as a static table.
 pub const PLANETS: &[Body] = &[
     MERCURY, VENUS, EARTH, MOON, MARS, JUPITER, SATURN, URANUS, NEPTUNE,
 ];

@@ -18,21 +18,36 @@ pub enum LocalTime {
     /// Unique mapping.
     Unique(Instant),
     /// Skipped at spring-forward. The civil time does not occur.
-    Gap { before: Instant, after: Instant },
+    Gap {
+        /// Instant just before the gap (standard offset).
+        before: Instant,
+        /// Instant just after the gap (DST offset).
+        after: Instant,
+    },
     /// Repeated at fall-back. `first` is DST, `second` is standard (later Instant).
-    Overlap { first: Instant, second: Instant },
+    Overlap {
+        /// Earlier occurrence (DST).
+        first: Instant,
+        /// Later occurrence (standard time).
+        second: Instant,
+    },
 }
 
+/// UTC offset in force in a named zone.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ZoneOffset {
+    /// Seconds east of UTC (negative west).
     pub seconds_east: i32,
+    /// Whether this offset is a daylight-saving offset in this zone's rules.
     pub is_dst: bool,
+    /// Short abbreviation (e.g. `EST`).
     pub abbr: &'static str,
 }
 
 /// A named zone in the subset.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum TimeZone {
+    /// UTC (`Etc/UTC`).
     Utc,
     /// America/New_York (US DST 2007+).
     AmericaNewYork,
@@ -49,6 +64,7 @@ pub enum TimeZone {
 }
 
 impl TimeZone {
+    /// IANA-style identifier for this subset zone.
     pub fn iana_name(self) -> &'static str {
         match self {
             Self::Utc => "UTC",
@@ -61,6 +77,7 @@ impl TimeZone {
         }
     }
 
+    /// Look up a subset zone. Unknown names return [`Error::Unsupported`].
     pub fn from_iana(name: &str) -> Result<Self> {
         Ok(match name {
             "UTC" | "Etc/UTC" | "Zulu" => Self::Utc,

@@ -4,14 +4,18 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
-description = "Satellite-clean timescales for Earth, the Moon, and the solar system"
-repository = "https://github.com/shankhyachatterjee/satellite-datetime"
+description = "Experimental no_std timescales: TAI instants with UTC leaps, GNSS, lunar TCL, and Mars sols (0.1 WIP, not flight-qualified)"
+repository = "https://github.com/SSC-SDE/satellite-datetime"
+homepage = "https://github.com/SSC-SDE/satellite-datetime"
+documentation = "https://docs.rs/satellite-datetime"
 readme = "README.md"
 keywords = ["time", "tai", "utc", "spacecraft", "lunar"]
 categories = ["date-and-time", "no-std", "science"]
 exclude = [".github"]
+publish = true
 
 [features]
+# Laptop/ground profile. Use --no-default-features for satellites.
 default = ["std", "earth", "tz", "gnss", "lunar", "mars", "bodies", "ccsds"]
 std = ["alloc"]
 alloc = []
@@ -26,12 +30,18 @@ ccsds = []
 [lib]
 name = "satellite_datetime"
 
+[[example]]
+name = "rfc3339_leap"
+required-features = ["earth"]
+
 [dependencies]
 libm = { version = "0.2.15", default-features = false }
 
 [lints.rust]
 unsafe_code = "forbid"
+missing_docs = "warn"
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(docsrs)'] }
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]

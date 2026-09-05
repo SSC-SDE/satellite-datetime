@@ -17,6 +17,7 @@ pub struct LeapInfo {
     pub table: &'static str,
 }
 
+/// Version string for the numeric leap-second table in this crate build.
 pub const LEAP_TABLE_VERSION: &str = "IERS-Bulletin-C-2016-12-31+SOFA-pre1972-numeric";
 const RELEASE_YEAR: i32 = 2023;
 

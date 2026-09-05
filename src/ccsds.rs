@@ -7,7 +7,9 @@ use crate::instant::Instant;
 /// CUC configuration: 1–4 coarse octets (seconds) and 0–3 fine octets (fraction).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct CucConfig {
+    /// Number of octets counting whole SI seconds from the TAI 1958 epoch (`1..=4`).
     pub coarse_octets: u8,
+    /// Number of octets of binary fraction of a second (`0..=3`).
     pub fine_octets: u8,
 }
 
@@ -113,6 +115,7 @@ pub fn encode_cds(instant: Instant, out: &mut [u8]) -> Result<usize> {
     Ok(6)
 }
 
+/// Decode a 6-octet CDS T-field (day + millisecond of day).
 pub fn decode_cds(buf: &[u8]) -> Result<Instant> {
     if buf.len() < 6 {
         return Err(Error::Codec);
