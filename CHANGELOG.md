@@ -16,5 +16,6 @@ This crate is **0.x**: entries may include breaking changes without a 1.0 bump.
 - IANA-compatible DST for a seven-zone subset (not full tzdb).
 - IAU 2024 TCL origin and provisional LTC alias; mean lunar surface rate.
 - NASA GISS MSD/MTC; IAU WGCCRE sidereal bodies; CCSDS CUC/CDS T-field.
+- crates.io / [docs.rs](https://docs.rs/satellite-datetime) metadata (`documentation` URL). Hosted rustdoc appears only after `cargo publish`.
 
 [0.1.0]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.0

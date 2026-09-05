@@ -27,6 +27,18 @@ satellite-datetime = { version = "0.1", default-features = false }
 
 MSRV: **1.85**. License: **MIT OR Apache-2.0**. SemVer: `0.x` may break in any minor or patch as the science and API settle; pin an exact version in production experiments.
 
+## Documentation
+
+Hosted API docs will live at **[docs.rs/satellite-datetime](https://docs.rs/satellite-datetime)** after the first `cargo publish` to [crates.io](https://crates.io/crates/satellite-datetime). Pushing to GitHub does **not** create that site.
+
+Until then, generate the same rustdoc locally:
+
+```bash
+cargo doc --all-features --no-deps --open
+```
+
+`Cargo.toml` sets `documentation = "https://docs.rs/satellite-datetime"` so crates.io can link it once the crate exists.
+
 ## Satellite profile
 
 Core types compile without an OS or heap:

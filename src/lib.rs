@@ -20,6 +20,9 @@
 //! ```
 //!
 //! Enable `--no-default-features` for the satellite (`no_std`, no allocator) profile.
+//!
+//! After the first crates.io release, API docs are at
+//! <https://docs.rs/satellite-datetime>. Locally: `cargo doc --open`.
 
 mod constants;
 pub mod duration;

@@ -18,6 +18,8 @@ cargo publish --dry-run
 
 MSRV is **1.85** (`package.rust-version` in `Cargo.toml`).
 
+API docs appear on [docs.rs/satellite-datetime](https://docs.rs/satellite-datetime) only after `cargo publish`. Until then: `cargo doc --all-features --no-deps --open`.
+
 ## Science
 
 Cite IAU/IERS/NASA sources in comments. Do not invent leap seconds, time zones, or a frozen LTC. Prefer golden vectors (ERFA, Mars24) over folklore constants.
