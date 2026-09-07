@@ -53,7 +53,7 @@ impl Duration {
         if !sec.is_finite() {
             return Err(Error::Overflow);
         }
-        let ns = (sec * 1_000_000_000.0).round();
+        let ns = libm::round(sec * 1_000_000_000.0);
         if ns < i128::MIN as f64 || ns > i128::MAX as f64 {
             return Err(Error::Overflow);
         }

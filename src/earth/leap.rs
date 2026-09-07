@@ -355,7 +355,14 @@ pub fn leap_seconds_on_utc_day(year: i32, month: u8, day: u8) -> Result<i8> {
     };
     let now = lookup_delta(year, month);
     let nxt = lookup_delta(ny, nm);
-    Ok((nxt - now) as i8)
+    // Modern UTC leap seconds are exactly +1 s. The 1972-01-01 TAI−UTC step
+    // from the radio-era offset (~4.2 s) to 10 s is not a 23:59:60 leap.
+    let step = nxt - now;
+    if (step - 1.0).abs() < 1e-9 {
+        Ok(1)
+    } else {
+        Ok(0)
+    }
 }
 
 fn lookup_delta(year: i32, month: u8) -> f64 {

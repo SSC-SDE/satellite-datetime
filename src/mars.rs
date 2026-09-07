@@ -24,7 +24,8 @@ impl Instant {
     pub fn mars_time(self) -> MarsTime {
         let jd_tt = self.julian_tt().as_f64();
         let msd = (jd_tt - MSD_EPOCH_JD_TT) / EARTH_DAYS_PER_SOL;
-        let frac = msd.rem_euclid(1.0);
+        let frac = msd - libm::floor(msd);
+        let frac = if frac < 0.0 { frac + 1.0 } else { frac };
         MarsTime {
             msd,
             mtc_hours: frac * 24.0,

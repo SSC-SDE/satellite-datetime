@@ -46,7 +46,7 @@ impl Instant {
         let dt = self.as_tai_nanos().saturating_sub(TAI_1977_NS);
         let days = dt as f64 / NS_PER_DAY as f64;
         Duration::from_nanos(
-            (days * LUNAR_SURFACE_MINUS_TT_PER_DAY.as_nanos() as f64).round() as i128,
+            libm::round(days * LUNAR_SURFACE_MINUS_TT_PER_DAY.as_nanos() as f64) as i128,
         )
     }
 }

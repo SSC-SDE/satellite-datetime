@@ -138,7 +138,11 @@ impl Instant {
             let since = tai_ns.checked_sub(midnight_tai).ok_or(Error::Overflow)?;
             let day_len = NS_PER_DAY + i128::from(leap.leap_at_end) * NS_PER_SEC;
             if since >= 0 && since < day_len {
-                return civil_from_since(y, m, d, since, leap.leap_at_end);
+                match civil_from_since(y, m, d, since, leap.leap_at_end) {
+                    Ok(c) => return Ok(c),
+                    Err(Error::InvalidTime) => continue,
+                    Err(e) => return Err(e),
+                }
             }
         }
         Err(Error::UtcUndefined)

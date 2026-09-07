@@ -22,4 +22,11 @@ cargo clippy --all-features -- -D warnings
 echo "==> cargo package --locked"
 cargo package --locked
 
+if command -v rustup >/dev/null 2>&1 && rustup target list --installed | grep -q '^thumbv7em-none-eabihf$'; then
+  echo "==> cargo check --no-default-features --target thumbv7em-none-eabihf"
+  cargo check --no-default-features --target thumbv7em-none-eabihf
+else
+  echo "==> skip thumbv7em (install with: rustup target add thumbv7em-none-eabihf)"
+fi
+
 echo "All checks passed."

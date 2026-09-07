@@ -12,7 +12,7 @@ impl Instant {
         let epoch = CivilUtc::new(1980, 1, 6, 0, 0, 0, 0)?.to_instant()?;
         let dt = self.duration_since(epoch)?.as_seconds_f64();
         // GPS does not insert leap seconds; elapsed SI from the GPS epoch equals GPS time.
-        let week = (dt / 604_800.0).floor() as i32;
+        let week = libm::floor(dt / 604_800.0) as i32;
         let sow = dt - f64::from(week) * 604_800.0;
         Ok((week, sow))
     }

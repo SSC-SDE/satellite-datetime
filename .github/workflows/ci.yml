@@ -41,3 +41,14 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.85.0
       - name: cargo check (all features)
         run: cargo check --all-features
+
+  thumb:
+    name: no_std thumbv7em-none-eabihf
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv7em-none-eabihf
+      - name: cargo check (satellite profile on Cortex-M4F)
+        run: cargo check --no-default-features --target thumbv7em-none-eabihf

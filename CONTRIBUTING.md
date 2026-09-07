@@ -32,7 +32,8 @@ clippy, package, MSRV).
 - **Changelog** — add a bullet under `## Unreleased` in [CHANGELOG.md](CHANGELOG.md) for
   user-visible changes (new API, fixes, breaking changes).
 - **Science** — cite IAU / IERS / NASA / CCSDS sources in comments or PR description. Prefer
-  golden vectors (ERFA, Mars24) over folklore constants.
+  golden vectors (ERFA, Mars24) over folklore constants. UTC↔TAI↔TT pairs live in
+  [`tests/erfa_golden.rs`](tests/erfa_golden.rs).
 - **Honesty** — document uncertainty and limitations in rustdoc when accuracy is approximate.
 
 ## Scope guardrails

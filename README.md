@@ -102,9 +102,11 @@ assert_eq!(leap.to_utc().unwrap().second, 60);
 
 - UTC↔TAI after 1972: integer leap seconds from IERS Bulletin C (numeric table).
 - Pre-1972 UTC: IERS `tai-utc.dat` drift terms (same numbers SOFA/ERFA use).
+- UTC↔TAI↔TT is checked against published SOFA cookbook / IERS pairs (`tests/erfa_golden.rs`); we do not copy ERFA source.
 - TDB−TT: two-term annual model (~1.6 ms); not ERFA `dtdb` (needs site).
 - TCL: origin-correct; linear TCB identification without lunar periodic series.
 - `f64` Julian dates are ~50 µs near J2000; instants stay `i128` nanoseconds.
+- CI compiles the `no_std` core for `thumbv7em-none-eabihf` (Cortex-M4F). That is a build check, not flight qualification.
 
 ## License
 
