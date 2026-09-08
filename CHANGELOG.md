@@ -7,6 +7,8 @@ This crate is **0.x**: entries may include breaking changes without a 1.0 bump.
 
 ## Unreleased
 
+## [0.1.1] - 2026-09-09
+
 ### Added
 
 - Open-source contribution pipeline: expanded CONTRIBUTING, Code of Conduct, issue/PR templates, `scripts/check.sh`.
@@ -31,4 +33,5 @@ This crate is **0.x**: entries may include breaking changes without a 1.0 bump.
 - NASA GISS MSD/MTC; IAU WGCCRE sidereal bodies; CCSDS CUC/CDS T-field.
 - crates.io / [docs.rs](https://docs.rs/satellite-datetime) metadata (`documentation` URL). Hosted rustdoc appears only after `cargo publish`.
 
+[0.1.1]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.1
 [0.1.0]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.0
