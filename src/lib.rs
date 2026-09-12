@@ -5,6 +5,7 @@
 //! **Status: 0.1 work-in-progress.** APIs may break. Not flight-qualified.
 //! Lunar TCL is origin-only (no IAU periodic series). Time zones are a seven-zone
 //! subset, not the IANA tzdb. Coordinated Lunar Time (LTC) is provisional.
+//! UT1/DUT1 is a pinned IERS C04 table (not CIP/CIO polar motion).
 //!
 //! An instant is not a calendar. The core stores TAI nanoseconds since
 //! 1958-01-01 00:00:00 TAI. UTC leap seconds, DST, sols, and lunar clocks are

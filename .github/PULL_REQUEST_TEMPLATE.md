@@ -12,7 +12,7 @@
 ## Checklist
 
 - [ ] I read [CONTRIBUTING.md](../CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)
-- [ ] `./scripts/check.sh` passes locally (or I ran the equivalent `cargo` commands)
+- [ ] Pipeline **dev** + **qa** stages pass (or `./scripts/check.sh` locally)
 - [ ] Tests added or updated for behavior changes
 - [ ] [CHANGELOG.md](../CHANGELOG.md) updated under `## Unreleased` (if user-visible)
 - [ ] Science changes cite IAU / IERS / NASA / CCSDS sources (or link in PR)

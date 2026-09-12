@@ -22,8 +22,9 @@ this project. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community expecta
 5. **Commit** with a clear message (what and why).
 6. **Push** to your fork and open a **pull request** against `main`.
 
-Every PR runs [GitHub Actions CI](.github/workflows/ci.yml) automatically (format, tests,
-clippy, package, MSRV).
+Every PR runs the staged [GitHub Actions pipeline](.github/workflows/pipeline.yml):
+**dev** (fmt + tests) → **qa** (clippy, package, MSRV, embedded). Merges to `main` also run
+**pre-prod** (docs, publish dry-run). Tag `v*` on `main` runs **prod** (crates.io publish).
 
 ## What we look for in PRs
 
@@ -67,8 +68,23 @@ cargo doc --all-features --no-deps --open
 ./scripts/check.sh
 ```
 
-This runs: `cargo fmt --check`, both test profiles, `clippy -D warnings`, and
-`cargo package --locked`.
+This runs the **dev** and **qa** stages locally: `cargo fmt --check`, both test profiles,
+`clippy -D warnings`, `cargo package --locked`, and `thumbv7em` when the target is installed.
+
+## CI/CD stages (main only)
+
+All work lands on `main`. There are no long-lived `dev`/`qa` branches — stages are pipeline jobs:
+
+| Stage | When | What |
+| --- | --- | --- |
+| **dev** | Every PR and push | `fmt`, unit tests (all features + `no_std` lib) |
+| **qa** | After dev passes | `clippy`, example, `cargo package`, MSRV 1.85, `thumbv7em` check |
+| **pre-prod** | Push to `main` only | Lockfile check, `cargo doc`, `cargo publish --dry-run` |
+| **prod** | Push tag `v*` on `main` | `cargo publish` to crates.io (`CARGO_REGISTRY_TOKEN` in **prod** environment) |
+
+Configure optional approval gates in GitHub → **Settings → Environments** (`dev`, `qa`, `pre-prod`, `prod`).
+
+**Release flow:** merge to `main` → pre-prod green → tag `v0.1.2` → prod publishes.
 
 ## Reporting issues
 

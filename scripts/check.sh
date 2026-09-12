@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Local pre-PR checks — mirrors .github/workflows/ci.yml (except MSRV job and example).
+# Local pre-PR checks — mirrors pipeline dev + qa stages (see .github/workflows/pipeline.yml).
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

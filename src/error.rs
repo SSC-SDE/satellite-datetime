@@ -15,6 +15,10 @@ pub enum Error {
     UtcUndefined,
     /// Leap-second table does not cover this future UTC date with certainty.
     LeapTableExpired,
+    /// UT1/DUT1 is not defined before the modern UTC era (1972-01-01).
+    Ut1Undefined,
+    /// DUT1 table does not cover this UTC date.
+    Ut1TableExpired,
     /// ISO 8601 / RFC 3339 text could not be parsed.
     Parse,
     /// Buffer was too small to hold the formatted timestamp.
@@ -37,6 +41,8 @@ impl fmt::Display for Error {
             Self::LeapTableExpired => {
                 f.write_str("UTC date is beyond the pinned leap-second table")
             }
+            Self::Ut1Undefined => f.write_str("UT1 is not defined before 1972-01-01 in this crate"),
+            Self::Ut1TableExpired => f.write_str("UTC date is beyond the pinned DUT1 table"),
             Self::Parse => f.write_str("timestamp parse error"),
             Self::BufferTooSmall => f.write_str("output buffer too small"),
             Self::Codec => f.write_str("time-code codec error"),

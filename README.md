@@ -57,6 +57,7 @@ There is no `now()` in the core. Inject a clock.
 | **TT** | TAI + 32.184 s (exact). Ephemeris lookup on Earth. |
 | **TCG / TCB / TDB** | IAU relativistic coordinate times (`L_G`, `L_B`, few-term TDB−TT). |
 | **UTC** | TAI minus IERS leap seconds (table pinned through 2016-12-31). |
+| **UT1** | UTC plus pinned IERS C04 DUT1 (5-day knots, 1972–2026); IAU 2000 ERA and mean GMST. |
 | **POSIX Unix** | Civil seconds **without** leaps; `si_nanos_since_unix_epoch` counts real SI. |
 | **GPS / GST / BDT** | Fixed offsets from TAI. |
 | **TCL** | IAU 2024 Lunar Coordinate Time (origin 1977 with TCB). Periodic BCRS terms omitted. |
@@ -70,7 +71,7 @@ Relativity: converting **coordinate** times does not need a trajectory. Converti
 | Feature | Default | Contents |
 | --- | --- | --- |
 | *(none)* | | `Instant`, `Duration`, TAI, TT, TCG, TCB, TDB |
-| `earth` | yes | Gregorian, UTC leaps, ISO 8601 / RFC 3339, POSIX Unix |
+| `earth` | yes | Gregorian, UTC leaps, DUT1/UT1, ERA/GMST, ISO 8601 / RFC 3339, POSIX Unix |
 | `tz` | yes | IANA subset `2026a-subset` (NY, LA, London, Paris, Kolkata, Auckland, UTC) |
 | `gnss` | yes | GPS week/SoW, Galileo, BeiDou |
 | `lunar` | yes | TCL, provisional LTC, mean lunar surface proper |
@@ -79,15 +80,29 @@ Relativity: converting **coordinate** times does not need a trajectory. Converti
 | `ccsds` | yes | CCSDS 301.0-B-4 CUC and CDS |
 | `std` / `alloc` | yes | `std::error::Error`; formatting still works on `no_std` via buffers |
 
-Leap seconds, UT1, and tz data are **pinned tables**, never fetched on-device.
+Leap seconds, DUT1, and tz data are **pinned tables**, never fetched on-device.
+Polar motion and the equation of the equinoxes are **not** included.
+[`bodies::EARTH`](https://docs.rs/satellite-datetime/latest/satellite_datetime/bodies/constant.EARTH.html) is IAU WGCCRE cartographic rotation, not IERS UT1.
 
 ## Example
 
 ```rust
-use satellite_datetime::{parse_rfc3339, Instant};
+use satellite_datetime::{earth::dut1, parse_rfc3339, Instant};
 
 let t: Instant = parse_rfc3339("2010-07-24T11:18:07.318Z").unwrap();
 assert_eq!(t.to_utc().unwrap().second, 7);
+let era = t.earth_rotation_angle_rad().unwrap();
+let info = dut1(t).unwrap();
+```
+
+Earth rotation (IAU 2000 ERA, radians):
+
+```rust
+use satellite_datetime::{parse_rfc3339, Instant};
+
+let t = parse_rfc3339("2010-07-24T11:18:07.318Z").unwrap();
+let theta = t.earth_rotation_angle_rad().unwrap();
+assert!(theta >= 0.0 && theta < 2.0 * core::f64::consts::PI);
 ```
 
 Leap second:
@@ -101,6 +116,7 @@ assert_eq!(leap.to_utc().unwrap().second, 60);
 ## Accuracy notes
 
 - UTC↔TAI after 1972: integer leap seconds from IERS Bulletin C (numeric table).
+- DUT1: IERS EOP C04 14 on a 5-day knot grid (linear interpolation, ~0.1 ms quantization); ERA and mean GMST from UT1. Not VLBI-grade; no polar motion.
 - Pre-1972 UTC: IERS `tai-utc.dat` drift terms (same numbers SOFA/ERFA use).
 - UTC↔TAI↔TT is checked against published SOFA cookbook / IERS pairs (`tests/erfa_golden.rs`); we do not copy ERFA source.
 - TDB−TT: two-term annual model (~1.6 ms); not ERFA `dtdb` (needs site).
@@ -116,4 +132,4 @@ Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT](
 
 Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the fork → PR workflow and
 [`./scripts/check.sh`](scripts/check.sh) for local CI checks. Please follow the
-[Code of Conduct](CODE_OF_CONDUCT.md). Pull requests run GitHub Actions automatically.
+[Code of Conduct](CODE_OF_CONDUCT.md). Pull requests run the **dev** and **qa** pipeline stages; merges to `main` also run **pre-prod**.

@@ -7,6 +7,15 @@ This crate is **0.x**: entries may include breaking changes without a 1.0 bump.
 
 ## Unreleased
 
+## [0.1.2] - 2026-09-12
+
+### Added
+
+- Pinned IERS EOP C04 DUT1 (UT1−UTC) table on a 5-day knot grid from 1972-01-01 through MJD 61045.
+- `earth::dut1`, `Instant::julian_ut1`, `Instant::earth_rotation_angle_rad` (IAU 2000 ERA), and `Instant::gmst_mean_rad` (IAU 2006 mean GMST).
+- `scripts/gen_ut1_table.py` to regenerate `src/earth/ut1_table.rs` from IERS C04.
+- Golden tests in `tests/iers_ut1_golden.rs`.
+
 ## [0.1.1] - 2026-09-09
 
 ### Added
@@ -33,5 +42,6 @@ This crate is **0.x**: entries may include breaking changes without a 1.0 bump.
 - NASA GISS MSD/MTC; IAU WGCCRE sidereal bodies; CCSDS CUC/CDS T-field.
 - crates.io / [docs.rs](https://docs.rs/satellite-datetime) metadata (`documentation` URL). Hosted rustdoc appears only after `cargo publish`.
 
+[0.1.2]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.2
 [0.1.1]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.1
 [0.1.0]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.0

@@ -3,10 +3,13 @@
 mod iso8601;
 mod leap;
 mod unix;
+mod ut1;
+mod ut1_table;
 
 pub use iso8601::{format_rfc3339, parse_rfc3339};
 pub use leap::{leap_seconds_on_utc_day, tai_minus_utc, LeapInfo};
 pub use unix::{from_posix_nanos, from_posix_seconds, si_nanos_since_unix_epoch, to_posix_seconds};
+pub use ut1::{dut1, Ut1Info, UT1_TABLE_VERSION};
 
 use crate::constants::{NS_PER_DAY, NS_PER_SEC, TAI_EPOCH_UNIX_DAYS};
 use crate::duration::Duration;
