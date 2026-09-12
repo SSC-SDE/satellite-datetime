@@ -1,10 +1,10 @@
 [package]
 name = "satellite-datetime"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
-description = "Experimental no_std timescales: TAI instants with UTC leaps, GNSS, lunar TCL, and Mars sols (0.1 WIP, not flight-qualified)"
+description = "Experimental no_std timescales: TAI instants with UTC leaps, DUT1/ERA, GNSS, lunar TCL, and Mars sols (0.1 WIP, not flight-qualified)"
 repository = "https://github.com/SSC-SDE/satellite-datetime"
 homepage = "https://github.com/SSC-SDE/satellite-datetime"
 documentation = "https://docs.rs/satellite-datetime"
@@ -36,6 +36,14 @@ required-features = ["earth"]
 
 [dependencies]
 libm = { version = "0.2.15", default-features = false }
+
+[dev-dependencies]
+criterion = { version = "0.5", default-features = false, features = ["cargo_bench_support"] }
+
+[[bench]]
+name = "conversions"
+harness = false
+required-features = ["earth", "ccsds"]
 
 [lints.rust]
 unsafe_code = "forbid"

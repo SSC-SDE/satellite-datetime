@@ -13,19 +13,21 @@ Rust timescales for spacecraft, the Moon, and the solar system. An **instant is 
 
 ## Install
 
+Crate **0.1.3** is on [crates.io](https://crates.io/crates/satellite-datetime). Pin an exact version in experiments (`0.x` may break):
+
 ```toml
 [dependencies]
-satellite-datetime = "0.1"
+satellite-datetime = "=0.1.3"
 ```
 
 Satellite / `no_std` (no default features, no allocator):
 
 ```toml
 [dependencies]
-satellite-datetime = { version = "0.1", default-features = false }
+satellite-datetime = { version = "=0.1.3", default-features = false }
 ```
 
-MSRV: **1.85**. License: **MIT OR Apache-2.0**. SemVer: `0.x` may break in any minor or patch as the science and API settle; pin an exact version in production experiments.
+MSRV: **1.85**. License: **MIT OR Apache-2.0**.
 
 ## Documentation
 
@@ -49,6 +51,16 @@ A laptop build (`cargo test`) enables Earth civil time, time zones, GNSS, Moon, 
 
 There is no `now()` in the core. Inject a clock.
 
+## API layers (`earth`)
+
+| Layer | Use when | Typical APIs | Host cost (order of magnitude) |
+| --- | --- | --- | --- |
+| **Core** | Onboard TAI math, TM T-fields | `Instant::checked_add`, `reading_tt` / `reading_gps`, `encode_cuc` | ~3–8 ns |
+| **Hot path** | Many samples on a known UTC day | `UtcDay::civil_from_instant`, `dut1_at`, `era_at_utc` | ~9–30 ns |
+| **Convenience** | One-off logs, unknown day | `Instant::to_utc`, `dut1`, `earth_rotation_angle_rad` | ~70–90 ns |
+
+Convenience APIs are correct; they reconstruct civil UTC with a leap-table search. Do not call them every tick if you already have `CivilUtc` or can pin a `UtcDay`.
+
 ## Timescales
 
 | Scale | Role |
@@ -71,7 +83,7 @@ Relativity: converting **coordinate** times does not need a trajectory. Converti
 | Feature | Default | Contents |
 | --- | --- | --- |
 | *(none)* | | `Instant`, `Duration`, TAI, TT, TCG, TCB, TDB |
-| `earth` | yes | Gregorian, UTC leaps, DUT1/UT1, ERA/GMST, ISO 8601 / RFC 3339, POSIX Unix |
+| `earth` | yes | Gregorian, UTC leaps, DUT1/UT1, ERA/GMST, `UtcDay` / `UtcContext`, ISO 8601 / RFC 3339, POSIX Unix |
 | `tz` | yes | IANA subset `2026a-subset` (NY, LA, London, Paris, Kolkata, Auckland, UTC) |
 | `gnss` | yes | GPS week/SoW, Galileo, BeiDou |
 | `lunar` | yes | TCL, provisional LTC, mean lunar surface proper |
@@ -86,6 +98,8 @@ Polar motion and the equation of the equinoxes are **not** included.
 
 ## Example
 
+Convenience (`Instant` → search → civil):
+
 ```rust
 use satellite_datetime::{earth::dut1, parse_rfc3339, Instant};
 
@@ -93,16 +107,23 @@ let t: Instant = parse_rfc3339("2010-07-24T11:18:07.318Z").unwrap();
 assert_eq!(t.to_utc().unwrap().second, 7);
 let era = t.earth_rotation_angle_rad().unwrap();
 let info = dut1(t).unwrap();
+assert!(era >= 0.0 && era < 2.0 * core::f64::consts::PI);
+let _ = info;
 ```
 
-Earth rotation (IAU 2000 ERA, radians):
+Hot loop (pin the UTC day once; core `Instant` math stays on TAI):
 
 ```rust
-use satellite_datetime::{parse_rfc3339, Instant};
+use satellite_datetime::{dut1_at, era_at_utc, CivilUtc, UtcDay};
 
-let t = parse_rfc3339("2010-07-24T11:18:07.318Z").unwrap();
-let theta = t.earth_rotation_angle_rad().unwrap();
-assert!(theta >= 0.0 && theta < 2.0 * core::f64::consts::PI);
+let day = UtcDay::new(2010, 7, 24).unwrap();
+let inst = CivilUtc::new(2010, 7, 24, 11, 18, 7, 318_000_000)
+    .unwrap()
+    .to_instant()
+    .unwrap();
+let utc = day.civil_from_instant(inst).unwrap(); // O(1), no search loop
+let _d = dut1_at(utc).unwrap();
+let _theta = era_at_utc(utc).unwrap();
 ```
 
 Leap second:
@@ -113,12 +134,27 @@ let leap = parse_rfc3339("2016-12-31T23:59:60Z").unwrap();
 assert_eq!(leap.to_utc().unwrap().second, 60);
 ```
 
+## Benchmarks
+
+Host conversion cost (not flight time, not scientific accuracy):
+
+```bash
+cargo bench --bench conversions
+```
+
+Measures nanoseconds per call on **your** machine (Criterion median). Use for relative
+comparisons on the same host only. Compare `dut1` (convenience) vs `dut1_at` /
+`utc_day_civil_from_instant` (hot path). Does **not** measure Cortex-M4F cycles, DUT1
+interpolation residual vs daily C04, or CI gating. See
+[`benches/conversions.rs`](benches/conversions.rs). Not part of `./scripts/check.sh`.
+
 ## Accuracy notes
 
 - UTC↔TAI after 1972: integer leap seconds from IERS Bulletin C (numeric table).
 - DUT1: IERS EOP C04 14 on a 5-day knot grid (linear interpolation, ~0.1 ms quantization); ERA and mean GMST from UT1. Not VLBI-grade; no polar motion.
 - Pre-1972 UTC: IERS `tai-utc.dat` drift terms (same numbers SOFA/ERFA use).
 - UTC↔TAI↔TT is checked against published SOFA cookbook / IERS pairs (`tests/erfa_golden.rs`); we do not copy ERFA source.
+- DUT1/ERA golden pairs: `tests/iers_ut1_golden.rs`.
 - TDB−TT: two-term annual model (~1.6 ms); not ERFA `dtdb` (needs site).
 - TCL: origin-correct; linear TCB identification without lunar periodic series.
 - `f64` Julian dates are ~50 µs near J2000; instants stay `i128` nanoseconds.

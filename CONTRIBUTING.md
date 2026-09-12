@@ -34,7 +34,8 @@ Every PR runs the staged [GitHub Actions pipeline](.github/workflows/pipeline.ym
   user-visible changes (new API, fixes, breaking changes).
 - **Science** — cite IAU / IERS / NASA / CCSDS sources in comments or PR description. Prefer
   golden vectors (ERFA, Mars24) over folklore constants. UTC↔TAI↔TT pairs live in
-  [`tests/erfa_golden.rs`](tests/erfa_golden.rs).
+  [`tests/erfa_golden.rs`](tests/erfa_golden.rs); DUT1/ERA pairs in
+  [`tests/iers_ut1_golden.rs`](tests/iers_ut1_golden.rs).
 - **Honesty** — document uncertainty and limitations in rustdoc when accuracy is approximate.
 
 ## Scope guardrails
@@ -60,6 +61,9 @@ cargo test --no-default-features --lib
 
 # API docs (also on https://docs.rs/satellite-datetime)
 cargo doc --all-features --no-deps --open
+
+# Optional: host conversion benchmarks (not part of CI or ./scripts/check.sh)
+cargo bench --bench conversions
 ```
 
 ### One-command check
@@ -70,6 +74,9 @@ cargo doc --all-features --no-deps --open
 
 This runs the **dev** and **qa** stages locally: `cargo fmt --check`, both test profiles,
 `clippy -D warnings`, `cargo package --locked`, and `thumbv7em` when the target is installed.
+
+**Benchmarks** (`cargo bench --bench conversions`) are optional and host-only. They are not run
+in CI and must not be used as flight-qualification or science-accuracy metrics.
 
 ## CI/CD stages (main only)
 
@@ -84,7 +91,7 @@ All work lands on `main`. There are no long-lived `dev`/`qa` branches — stages
 
 Configure optional approval gates in GitHub → **Settings → Environments** (`dev`, `qa`, `pre-prod`, `prod`).
 
-**Release flow:** merge to `main` → pre-prod green → tag `v0.1.2` → prod publishes.
+**Release flow:** merge to `main` → pre-prod green → tag `v0.1.3` → prod publishes.
 
 ## Reporting issues
 

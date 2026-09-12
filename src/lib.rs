@@ -11,6 +11,10 @@
 //! 1958-01-01 00:00:00 TAI. UTC leap seconds, DST, sols, and lunar clocks are
 //! projections of that value. There is no `now()`; inject a clock.
 //!
+//! **Cost model (`earth` feature):** TAI arithmetic is the hot core. Reconstructing
+//! civil UTC from an arbitrary [`Instant`] (`to_utc`) is a convenience search.
+//! Same-day telemetry should pin a [`UtcDay`] and use [`dut1_at`] / [`era_at_utc`].
+//!
 //! ```
 //! use satellite_datetime::{Duration, Instant};
 //!
@@ -22,8 +26,7 @@
 //!
 //! Enable `--no-default-features` for the satellite (`no_std`, no allocator) profile.
 //!
-//! After the first crates.io release, API docs are at
-//! <https://docs.rs/satellite-datetime>. Locally: `cargo doc --open`.
+//! API docs: <https://docs.rs/satellite-datetime>. Locally: `cargo doc --open`.
 
 mod constants;
 pub mod duration;
@@ -67,4 +70,7 @@ pub use scale::{Bdt, Gps, Gst, Ltc, Reading, Scale, Tai, Tcb, Tcg, Tcl, Tdb, Tt}
 
 #[cfg(feature = "earth")]
 #[cfg_attr(docsrs, doc(cfg(feature = "earth")))]
-pub use earth::{format_rfc3339, parse_rfc3339, CivilUtc};
+pub use earth::{
+    dut1_at, era_at_utc, format_rfc3339, gmst_mean_at_utc, julian_ut1_at, parse_rfc3339, utc_mjd,
+    CivilUtc, UtcContext, UtcDay,
+};

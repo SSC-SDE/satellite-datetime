@@ -1,7 +1,12 @@
 //! Pinned IERS C04 DUT1 (UT1−UTC) and Earth rotation from UT1.
 //!
+//! **Hot path** (sub-search-loop): [`utc_mjd`], [`dut1_at`], [`era_at_utc`], [`gmst_mean_at_utc`]
+//! on an existing [`CivilUtc`], or [`crate::UtcDay`] / [`crate::UtcContext`] for many instants on one UTC date.
+//!
+//! **Convenience** (runs [`Instant::to_utc`] search): [`dut1`], [`Instant::julian_ut1`],
+//! [`Instant::earth_rotation_angle_rad`], [`Instant::gmst_mean_rad`].
+//!
 //! DUT1 is sampled at 0h UTC on a 5-day knot grid (see [`UT1_TABLE_VERSION`]).
-//! Linear interpolation between knots is millisecond-class vs daily C04.
 //! Polar motion and the equation of the equinoxes are **not** included.
 //!
 //! [`crate::bodies::EARTH`] remains the IAU WGCCRE cartographic rotation model;
@@ -28,11 +33,17 @@ pub struct Ut1Info {
     pub table: &'static str,
 }
 
-/// DUT1 (UT1 − UTC) at this instant via the pinned C04 table.
-///
-/// Requires modern UTC (1972-01-01 onward) and a date within the table pin.
-pub fn dut1(instant: Instant) -> Result<Ut1Info> {
-    let utc = instant.to_utc()?;
+// ---------------------------------------------------------------------------
+// Hot path: caller already has civil UTC (no `Instant::to_utc` search).
+// ---------------------------------------------------------------------------
+
+/// Modified Julian Date of `utc` (continuous through leap seconds).
+pub fn utc_mjd(utc: CivilUtc) -> f64 {
+    utc_mjd_f64(utc)
+}
+
+/// DUT1 at `utc` via the pinned C04 table (no [`Instant::to_utc`]).
+pub fn dut1_at(utc: CivilUtc) -> Result<Ut1Info> {
     let dut1_sec = lookup_dut1_seconds(utc_mjd_f64(utc))?;
     Ok(Ut1Info {
         dut1: Duration::from_seconds_f64(dut1_sec)?,
@@ -40,40 +51,59 @@ pub fn dut1(instant: Instant) -> Result<Ut1Info> {
     })
 }
 
+/// Julian Date on UT1 from civil UTC (no [`Instant::to_utc`]).
+pub fn julian_ut1_at(utc: CivilUtc) -> Result<JulianDate> {
+    let mjd_ut1 = utc_mjd_f64(utc) + lookup_dut1_seconds(utc_mjd_f64(utc))? / 86_400.0;
+    Ok(julian_from_mjd(mjd_ut1))
+}
+
+/// IAU 2000 Earth Rotation Angle at `utc` (radians, `[0, 2π)`).
+pub fn era_at_utc(utc: CivilUtc) -> Result<f64> {
+    let jd = julian_ut1_at(utc)?.as_f64();
+    Ok(era_from_jd_ut1(jd))
+}
+
+/// IAU 2006 mean GMST at `utc` (radians, `[0, 2π)`).
+pub fn gmst_mean_at_utc(utc: CivilUtc) -> Result<f64> {
+    let jd = julian_ut1_at(utc)?.as_f64();
+    Ok(gmst_mean_from_jd_ut1(jd))
+}
+
+// ---------------------------------------------------------------------------
+// Convenience: `Instant` → search loop → civil → hot path internals.
+// ---------------------------------------------------------------------------
+
+/// DUT1 (UT1 − UTC) at this instant via the pinned C04 table.
+///
+/// Convenience wrapper: [`Instant::to_utc`] then [`dut1_at`]. For hot loops on a known
+/// UTC day, use [`crate::UtcDay`] + [`dut1_at`] instead.
+pub fn dut1(instant: Instant) -> Result<Ut1Info> {
+    dut1_at(instant.to_utc()?)
+}
+
 impl Instant {
     /// Julian Date on UT1 (two-part).
     ///
-    /// UT1 = UTC + DUT1 from the pinned C04 table. Uncertainty is
-    /// millisecond-class from knot interpolation; not VLBI-grade.
+    /// Convenience wrapper around [`julian_ut1_at`] after [`Self::to_utc`].
     pub fn julian_ut1(self) -> Result<JulianDate> {
-        let utc = self.to_utc()?;
-        let mjd_ut1 = utc_mjd_f64(utc) + dut1_seconds_at(utc)? / 86_400.0;
-        Ok(julian_from_mjd(mjd_ut1))
+        julian_ut1_at(self.to_utc()?)
     }
 
     /// IAU 2000 Earth Rotation Angle θ (radians), folded to `[0, 2π)`.
     ///
-    /// θ = 2π (0.7790572732640 + 1.00273781191135448 × (JD_UT1 − 2451545.0)).
-    /// No polar motion or nutation.
+    /// Convenience wrapper around [`era_at_utc`] after [`Self::to_utc`].
     pub fn earth_rotation_angle_rad(self) -> Result<f64> {
-        let jd = self.julian_ut1()?.as_f64();
-        Ok(era_from_jd_ut1(jd))
+        era_at_utc(self.to_utc()?)
     }
 
     /// IAU 2006 mean Greenwich sidereal time (radians), folded to `[0, 2π)`.
     ///
-    /// Polynomial in UT1 only; no equation of the equinoxes (not apparent GST).
+    /// Convenience wrapper around [`gmst_mean_at_utc`] after [`Self::to_utc`].
     pub fn gmst_mean_rad(self) -> Result<f64> {
-        let jd = self.julian_ut1()?.as_f64();
-        Ok(gmst_mean_from_jd_ut1(jd))
+        gmst_mean_at_utc(self.to_utc()?)
     }
 }
 
-fn dut1_seconds_at(utc: CivilUtc) -> Result<f64> {
-    lookup_dut1_seconds(utc_mjd_f64(utc))
-}
-
-/// Modified Julian Date of UTC civil time (continuous through leap seconds).
 fn utc_mjd_f64(utc: CivilUtc) -> f64 {
     let unix_days = unix_days_from_civil(utc.year, utc.month, utc.day) as f64;
     let mjd0 = unix_days + 40_587.0;
@@ -149,7 +179,6 @@ mod tests {
     #[test]
     fn knot_hit_1972_epoch() {
         let dut1 = lookup_dut1_seconds(41_317.0).unwrap();
-        // Knots store DUT1 in 0.1 ms units; exact C04 value is −0.0454859 s.
         assert!((dut1 - (-0.045_5)).abs() < 1e-4);
     }
 
@@ -165,8 +194,7 @@ mod tests {
     #[test]
     fn pre_1972_errors() {
         let c = CivilUtc::new(1971, 12, 31, 12, 0, 0, 0).unwrap();
-        let inst = c.to_instant().unwrap();
-        assert_eq!(dut1(inst), Err(Error::Ut1Undefined));
+        assert_eq!(dut1_at(c), Err(Error::Ut1Undefined));
     }
 
     #[test]
@@ -178,34 +206,41 @@ mod tests {
     }
 
     #[test]
-    fn era_in_range() {
+    fn hot_path_matches_convenience() {
         let c = CivilUtc::new(2010, 7, 24, 11, 18, 7, 318_000_000).unwrap();
         let inst = c.to_instant().unwrap();
-        let era = inst.earth_rotation_angle_rad().unwrap();
+        let d_slow = dut1(inst).unwrap();
+        let d_fast = dut1_at(c).unwrap();
+        assert_eq!(d_slow, d_fast);
+        let era_slow = inst.earth_rotation_angle_rad().unwrap();
+        let era_fast = era_at_utc(c).unwrap();
+        assert!((era_slow - era_fast).abs() < 1e-12);
+        let gmst_slow = inst.gmst_mean_rad().unwrap();
+        let gmst_fast = gmst_mean_at_utc(c).unwrap();
+        assert!((gmst_slow - gmst_fast).abs() < 1e-12);
+    }
+
+    #[test]
+    fn era_in_range() {
+        let c = CivilUtc::new(2010, 7, 24, 11, 18, 7, 318_000_000).unwrap();
+        let era = era_at_utc(c).unwrap();
         assert!(era >= 0.0 && era < TWO_PI);
     }
 
     #[test]
     fn gmst_in_range() {
         let c = CivilUtc::new(2000, 1, 1, 12, 0, 0, 0).unwrap();
-        let inst = c.to_instant().unwrap();
-        let gmst = inst.gmst_mean_rad().unwrap();
+        let gmst = gmst_mean_at_utc(c).unwrap();
         assert!(gmst >= 0.0 && gmst < TWO_PI);
     }
 
     #[test]
     fn j2000_era_near_classical_gmst() {
-        // At JD_UT1 = 2451545.0, ERA ≈ 2π × ERA0 ≈ 280.46° (classical GMST at J2000).
         let c = CivilUtc::new(2000, 1, 1, 12, 0, 0, 0).unwrap();
-        let inst = c.to_instant().unwrap();
-        let jd = inst.julian_ut1().unwrap().as_f64();
+        let jd = julian_ut1_at(c).unwrap().as_f64();
         let era = era_from_jd_ut1(jd);
         let expected = TWO_PI * ERA0;
-        // DUT1 offset from exact J2000 UT1 moves this by arcminutes, not hours.
-        assert!(
-            (era - expected).abs() < 0.05,
-            "era={era} expected≈{expected}"
-        );
+        assert!((era - expected).abs() < 0.05);
     }
 
     #[test]
@@ -216,5 +251,12 @@ mod tests {
         assert_eq!(info.table, UT1_TABLE_VERSION);
         assert!(info.dut1.as_seconds_f64().abs() < 1.0);
         assert_eq!(tai_minus_utc(2017, 1, 1, 0.0).unwrap().tai_minus_utc, 37.0);
+    }
+
+    #[test]
+    fn utc_mjd_matches_julian() {
+        let c = CivilUtc::new(2010, 7, 24, 11, 18, 7, 0).unwrap();
+        let mjd = utc_mjd(c);
+        assert!(mjd > 55_000.0 && mjd < 56_000.0);
     }
 }

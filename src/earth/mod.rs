@@ -1,15 +1,28 @@
-//! Earth civil time: leap seconds, Gregorian, ISO 8601, POSIX Unix.
+//! Earth civil time: leap seconds, Gregorian, ISO 8601, POSIX Unix, DUT1, ERA.
+//!
+//! **Layers.** Core [`crate::Instant`] stays on TAI nanoseconds. This module is a
+//! *projection* of that instant.
+//!
+//! - **Convenience:** [`Instant::to_utc`], [`dut1`], [`Instant::earth_rotation_angle_rad`]
+//!   reconstruct civil UTC (search loop). Fine for logs and one-off conversions.
+//! - **Hot path:** pin a [`UtcDay`] (or keep a [`CivilUtc`]) and call
+//!   [`UtcDay::civil_from_instant`], [`dut1_at`], [`era_at_utc`]. No `to_utc` search.
+//! - **Streaming:** [`UtcContext`] re-pins the day when a sample crosses midnight.
 
 mod iso8601;
 mod leap;
 mod unix;
 mod ut1;
 mod ut1_table;
+mod utc_day;
 
 pub use iso8601::{format_rfc3339, parse_rfc3339};
 pub use leap::{leap_seconds_on_utc_day, tai_minus_utc, LeapInfo};
 pub use unix::{from_posix_nanos, from_posix_seconds, si_nanos_since_unix_epoch, to_posix_seconds};
-pub use ut1::{dut1, Ut1Info, UT1_TABLE_VERSION};
+pub use ut1::{
+    dut1, dut1_at, era_at_utc, gmst_mean_at_utc, julian_ut1_at, utc_mjd, Ut1Info, UT1_TABLE_VERSION,
+};
+pub use utc_day::{UtcContext, UtcDay};
 
 use crate::constants::{NS_PER_DAY, NS_PER_SEC, TAI_EPOCH_UNIX_DAYS};
 use crate::duration::Duration;
@@ -112,6 +125,10 @@ impl CivilUtc {
 
 impl Instant {
     /// UTC civil time. `second` may be 60 on a leap-second day.
+    ///
+    /// Convenience inverse: searches nearby UTC days using the leap table.
+    /// For many instants on one date, pin [`crate::UtcDay`] once and call
+    /// [`crate::UtcDay::civil_from_instant`].
     pub fn to_utc(self) -> Result<CivilUtc> {
         let tai_ns = self.as_tai_nanos();
         let approx = tai_ns.saturating_sub(37 * NS_PER_SEC);
@@ -152,7 +169,13 @@ impl Instant {
     }
 }
 
-fn civil_from_since(y: i32, m: u8, d: u8, since: i128, leap_at_end: i8) -> Result<CivilUtc> {
+pub(crate) fn civil_from_since(
+    y: i32,
+    m: u8,
+    d: u8,
+    since: i128,
+    leap_at_end: i8,
+) -> Result<CivilUtc> {
     if leap_at_end == 1 && since >= NS_PER_DAY {
         let nano = (since - NS_PER_DAY) as u32;
         return Ok(CivilUtc {

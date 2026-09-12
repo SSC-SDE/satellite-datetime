@@ -11,6 +11,10 @@ use crate::scale::{Gps, Reading, Tai, Tcb, Tcg, Tdb, Tt};
 ///
 /// Civil time, DST, leap seconds, sols, and lunar clocks are projections of
 /// this value. Clock sources are injected: the core has no `now()`.
+///
+/// TAI add/sub and scale readings (TT, GPS, …) do not consult leap tables.
+/// Reconstructing civil UTC from an arbitrary instant (`to_utc`, feature `earth`)
+/// is a convenience search; same-day loops should pin `UtcDay` instead.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Instant {
     tai_ns: i128,

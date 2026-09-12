@@ -7,6 +7,25 @@ This crate is **0.x**: entries may include breaking changes without a 1.0 bump.
 
 ## Unreleased
 
+## [0.1.3] - 2026-09-13
+
+### Added
+
+- Hot-path Earth APIs on existing `CivilUtc`: `utc_mjd`, `dut1_at`, `julian_ut1_at`, `era_at_utc`, `gmst_mean_at_utc` (no `Instant::to_utc` search).
+- `UtcDay` and `UtcContext` for O(1) same-day `Instant` → civil UTC in telemetry loops.
+- Host Criterion benches in `benches/conversions.rs` (core, convenience UTC/DUT1/ERA, RFC 3339, CUC, plus `dut1_at_civil`, `era_at_utc_civil`, `utc_day_civil_from_instant`). Not a CI gate.
+
+### Changed
+
+- Documented the cost split: TAI core vs convenience `to_utc` vs hot-path `UtcDay` / `dut1_at`.
+- Crate description mentions DUT1/ERA.
+
+### Added
+
+- Hot-path Earth APIs on existing [`CivilUtc`](https://docs.rs/satellite-datetime/latest/satellite_datetime/struct.CivilUtc.html): `utc_mjd`, `dut1_at`, `julian_ut1_at`, `era_at_utc`, `gmst_mean_at_utc` (no `Instant::to_utc` search).
+- [`UtcDay`](https://docs.rs/satellite-datetime/latest/satellite_datetime/struct.UtcDay.html) and [`UtcContext`](https://docs.rs/satellite-datetime/latest/satellite_datetime/struct.UtcContext.html) for O(1) same-day `Instant` → civil UTC in telemetry loops.
+- Criterion benches `dut1_at_civil`, `era_at_utc_civil`, `utc_day_civil_from_instant`.
+
 ## [0.1.2] - 2026-09-12
 
 ### Added
@@ -42,6 +61,7 @@ This crate is **0.x**: entries may include breaking changes without a 1.0 bump.
 - NASA GISS MSD/MTC; IAU WGCCRE sidereal bodies; CCSDS CUC/CDS T-field.
 - crates.io / [docs.rs](https://docs.rs/satellite-datetime) metadata (`documentation` URL). Hosted rustdoc appears only after `cargo publish`.
 
+[0.1.3]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.3
 [0.1.2]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.2
 [0.1.1]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.1
 [0.1.0]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.0
