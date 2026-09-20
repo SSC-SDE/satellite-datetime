@@ -13,18 +13,18 @@ Rust timescales for spacecraft, the Moon, and the solar system. An **instant is 
 
 ## Install
 
-Crate **0.1.3** is on [crates.io](https://crates.io/crates/satellite-datetime). Pin an exact version in experiments (`0.x` may break):
+Crate **0.1.4** is on [crates.io](https://crates.io/crates/satellite-datetime). Pin an exact version in experiments (`0.x` may break):
 
 ```toml
 [dependencies]
-satellite-datetime = "=0.1.3"
+satellite-datetime = "=0.1.4"
 ```
 
 Satellite / `no_std` (no default features, no allocator):
 
 ```toml
 [dependencies]
-satellite-datetime = { version = "=0.1.3", default-features = false }
+satellite-datetime = { version = "=0.1.4", default-features = false }
 ```
 
 MSRV: **1.85**. License: **MIT OR Apache-2.0**.
@@ -89,7 +89,7 @@ Relativity: converting **coordinate** times does not need a trajectory. Converti
 | `lunar` | yes | TCL, provisional LTC, mean lunar surface proper |
 | `mars` | yes | MSD, MTC |
 | `bodies` | yes | IAU WGCCRE sidereal prime meridian, Mercury–Neptune |
-| `ccsds` | yes | CCSDS 301.0-B-4 CUC and CDS |
+| `ccsds` | yes | CCSDS 301.0-B-4 CUC/CDS T-field and 1-octet P-field (1958 TAI) |
 | `std` / `alloc` | yes | `std::error::Error`; formatting still works on `no_std` via buffers |
 
 Leap seconds, DUT1, and tz data are **pinned tables**, never fetched on-device.

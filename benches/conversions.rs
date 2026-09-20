@@ -10,7 +10,7 @@
 #![allow(missing_docs)] // Criterion's `criterion_group!` expands to undocumented `main`.
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use satellite_datetime::ccsds::{encode_cuc, CucConfig};
+use satellite_datetime::ccsds::{encode_cuc, encode_cuc_with_p, CucConfig};
 use satellite_datetime::earth::{
     dut1, dut1_at, era_at_utc, format_rfc3339, parse_rfc3339, CivilUtc, UtcDay,
 };
@@ -158,6 +158,20 @@ fn bench_cuc_c4f2(c: &mut Criterion) {
     });
 }
 
+fn bench_cuc_c4f2_with_p(c: &mut Criterion) {
+    let t = instant_at(2010, 7, 24, 11, 18, 7, 318_000_000);
+    let mut buf = [0u8; 9];
+    c.bench_function("cuc_c4f2_with_p", |b| {
+        b.iter(|| {
+            black_box(encode_cuc_with_p(
+                black_box(t),
+                black_box(CucConfig::C4_F2),
+                black_box(&mut buf),
+            ))
+        })
+    });
+}
+
 criterion_group!(
     conversions,
     bench_instant_add,
@@ -169,6 +183,7 @@ criterion_group!(
     bench_rfc3339_parse,
     bench_rfc3339_format,
     bench_cuc_c4f2,
+    bench_cuc_c4f2_with_p,
     bench_dut1_at_civil,
     bench_era_at_utc_civil,
     bench_utc_day_civil_from_instant,
