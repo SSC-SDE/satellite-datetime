@@ -91,7 +91,7 @@ All work lands on `main`. There are no long-lived `dev`/`qa` branches — stages
 
 Configure optional approval gates in GitHub → **Settings → Environments** (`dev`, `qa`, `pre-prod`, `prod`).
 
-**Release flow:** merge to `main` → pre-prod green → tag `v0.1.3` → prod publishes.
+**Release flow:** merge to `main` → pre-prod green → tag `v0.1.4` → prod publishes.
 
 ## Reporting issues
 

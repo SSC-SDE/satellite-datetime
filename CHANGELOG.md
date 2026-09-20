@@ -7,6 +7,13 @@ This crate is **0.x**: entries may include breaking changes without a 1.0 bump.
 
 ## Unreleased
 
+## [0.1.4] - 2026-09-16
+
+### Added
+
+- CCSDS 301.0-B-4 one-octet P-field for level-1 CUC (`CucPField`, `encode_cuc_with_p`, `decode_cuc_with_p`) and CDS (`encode_cds_with_p`, `decode_cds_with_p`; 16-bit day + millisecond of day).
+- Golden wire tests in `tests/ccsds_301_golden.rs`.
+
 ## [0.1.3] - 2026-09-13
 
 ### Added
@@ -61,6 +68,7 @@ This crate is **0.x**: entries may include breaking changes without a 1.0 bump.
 - NASA GISS MSD/MTC; IAU WGCCRE sidereal bodies; CCSDS CUC/CDS T-field.
 - crates.io / [docs.rs](https://docs.rs/satellite-datetime) metadata (`documentation` URL). Hosted rustdoc appears only after `cargo publish`.
 
+[0.1.4]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.4
 [0.1.3]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.3
 [0.1.2]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.2
 [0.1.1]: https://github.com/SSC-SDE/satellite-datetime/releases/tag/v0.1.1

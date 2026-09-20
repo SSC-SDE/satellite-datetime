@@ -28,6 +28,77 @@ impl CucConfig {
     }
 }
 
+/// One-octet CCSDS P-field for level-1 CUC (1958-01-01 TAI epoch).
+///
+/// Bit layout (MSB = bit 7): extension (0), time code ID `001`, coarse length minus
+/// one, fractional octet count. Matches CCSDS 301.0-B-4 §3.2.2 without a second P-octet.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct CucPField {
+    /// Coarse/fine layout implied by the preamble.
+    pub config: CucConfig,
+}
+
+const CUC_ID_TAI_1958: u8 = 0x01;
+const CUC_ID_AGENCY: u8 = 0x02;
+/// CDS level-1, 1958 epoch, 16-bit day, millisecond-of-day (no sub-millisecond segment).
+const CDS_P_DAY16_MS32: u8 = 0x40;
+
+impl CucPField {
+    /// Preamble for [`CucConfig::C4_F2`] (`0x1E`).
+    pub const C4_F2: Self = Self {
+        config: CucConfig::C4_F2,
+    };
+
+    /// Build a preamble for a supported coarse/fine layout.
+    pub fn new(config: CucConfig) -> Result<Self> {
+        config.t_len()?;
+        Ok(Self { config })
+    }
+
+    /// Parse a one-octet CUC P-field from the wire.
+    pub fn from_octet(octet: u8) -> Result<Self> {
+        if octet & 0x80 != 0 {
+            return Err(Error::Unsupported);
+        }
+        let id = (octet >> 4) & 0x07;
+        match id {
+            CUC_ID_TAI_1958 => {}
+            CUC_ID_AGENCY => return Err(Error::Unsupported),
+            _ => return Err(Error::Codec),
+        }
+        let coarse_minus_1 = (octet >> 2) & 0x03;
+        let fine = octet & 0x03;
+        let config = CucConfig {
+            coarse_octets: coarse_minus_1 + 1,
+            fine_octets: fine,
+        };
+        config.t_len()?;
+        Ok(Self { config })
+    }
+
+    /// Encode this preamble to one octet.
+    pub fn to_octet(self) -> u8 {
+        let c = self.config;
+        (CUC_ID_TAI_1958 << 4) | ((c.coarse_octets - 1) << 2) | c.fine_octets
+    }
+}
+
+fn decode_cds_p_octet(octet: u8) -> Result<()> {
+    if octet & 0x80 != 0 {
+        return Err(Error::Unsupported);
+    }
+    let id = (octet >> 4) & 0x07;
+    match id {
+        0x04 => {}
+        0x05 => return Err(Error::Unsupported),
+        _ => return Err(Error::Codec),
+    }
+    if octet & 0x0F != 0 {
+        return Err(Error::Unsupported);
+    }
+    Ok(())
+}
+
 /// Encode TAI since 1958-01-01 as CCSDS unsegmented time code (T-field only).
 pub fn encode_cuc(instant: Instant, cfg: CucConfig, out: &mut [u8]) -> Result<usize> {
     let n = cfg.t_len()?;
@@ -91,6 +162,28 @@ pub fn decode_cuc(buf: &[u8], cfg: CucConfig) -> Result<Instant> {
     Ok(Instant::from_tai_nanos(tai_ns))
 }
 
+/// Encode CUC P-field + T-field (`1 + coarse + fine` octets).
+pub fn encode_cuc_with_p(instant: Instant, cfg: CucConfig, out: &mut [u8]) -> Result<usize> {
+    let p = CucPField::new(cfg)?;
+    let t_len = cfg.t_len()?;
+    if out.len() < 1 + t_len {
+        return Err(Error::BufferTooSmall);
+    }
+    out[0] = p.to_octet();
+    let n = encode_cuc(instant, cfg, &mut out[1..])?;
+    Ok(1 + n)
+}
+
+/// Decode CUC P-field + T-field; returns the instant and the wire coarse/fine layout.
+pub fn decode_cuc_with_p(buf: &[u8]) -> Result<(Instant, CucConfig)> {
+    if buf.is_empty() {
+        return Err(Error::Codec);
+    }
+    let p = CucPField::from_octet(buf[0])?;
+    let instant = decode_cuc(&buf[1..], p.config)?;
+    Ok((instant, p.config))
+}
+
 /// CDS: 16-bit day count from 1958-01-01 + 32-bit milliseconds of day.
 pub fn encode_cds(instant: Instant, out: &mut [u8]) -> Result<usize> {
     if out.len() < 6 {
@@ -130,6 +223,25 @@ pub fn decode_cds(buf: &[u8]) -> Result<Instant> {
     ))
 }
 
+/// Encode CDS P-field + 6-octet T-field (16-bit day + millisecond of day).
+pub fn encode_cds_with_p(instant: Instant, out: &mut [u8]) -> Result<usize> {
+    if out.len() < 7 {
+        return Err(Error::BufferTooSmall);
+    }
+    out[0] = CDS_P_DAY16_MS32;
+    encode_cds(instant, &mut out[1..])?;
+    Ok(7)
+}
+
+/// Decode CDS P-field + T-field.
+pub fn decode_cds_with_p(buf: &[u8]) -> Result<Instant> {
+    if buf.len() < 7 {
+        return Err(Error::Codec);
+    }
+    decode_cds_p_octet(buf[0])?;
+    decode_cds(&buf[1..])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -155,5 +267,52 @@ mod tests {
         let mut buf = [0u8; 6];
         encode_cds(t, &mut buf).unwrap();
         assert_eq!(decode_cds(&buf).unwrap(), t);
+    }
+
+    #[test]
+    fn cuc_p_c4f2_octet() {
+        assert_eq!(CucPField::C4_F2.to_octet(), 0x1E);
+        assert_eq!(
+            CucPField::from_octet(0x1E).unwrap().config,
+            CucConfig::C4_F2
+        );
+    }
+
+    #[test]
+    fn cuc_with_p_roundtrip() {
+        let t = Instant::TAI_EPOCH
+            .checked_add(Duration::from_seconds(42))
+            .unwrap();
+        let mut buf = [0u8; 9];
+        let n = encode_cuc_with_p(t, CucConfig::C4_F2, &mut buf).unwrap();
+        assert_eq!(n, 7);
+        assert_eq!(buf[0], 0x1E);
+        let (back, cfg) = decode_cuc_with_p(&buf[..n]).unwrap();
+        assert_eq!(cfg, CucConfig::C4_F2);
+        assert_eq!(back, t);
+    }
+
+    #[test]
+    fn cuc_p_rejects_extension_and_agency() {
+        assert_eq!(CucPField::from_octet(0x9E).unwrap_err(), Error::Unsupported);
+        assert_eq!(CucPField::from_octet(0x2E).unwrap_err(), Error::Unsupported);
+    }
+
+    #[test]
+    fn cds_with_p_roundtrip() {
+        let t = Instant::from_tai_nanos(10_000 * crate::NS_PER_DAY + 43_200_000 * 1_000_000);
+        let mut buf = [0u8; 7];
+        let n = encode_cds_with_p(t, &mut buf).unwrap();
+        assert_eq!(n, 7);
+        assert_eq!(buf[0], 0x40);
+        assert_eq!(decode_cds_with_p(&buf).unwrap(), t);
+    }
+
+    #[test]
+    fn cds_p_rejects_agency_layout() {
+        assert_eq!(
+            decode_cds_with_p(&[0x50, 0, 0, 0, 0, 0, 0]).unwrap_err(),
+            Error::Unsupported
+        );
     }
 }
